@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "name": "Debug slox",
+            "program": "${workspaceFolder:slox}\\.build/debug/slox",
+            "args": [],
+            "cwd": "${workspaceFolder:slox}",
+            "preLaunchTask": "swift: Build Debug slox"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "name": "Release slox",
+            "program": "${workspaceFolder:slox}\\.build/release/slox",
+            "args": [],
+            "cwd": "${workspaceFolder:slox}",
+            "preLaunchTask": "swift: Build Release slox"
+        }
+    ]
+}
