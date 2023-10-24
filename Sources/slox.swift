@@ -7,6 +7,8 @@ import Foundation
 @main
 struct slox: ParsableCommand {
     static var hadError = false
+    static var hadRuntimeError = false
+    private static let interpreter = Interpreter()
     
     @Argument(help: "enter a filename")
     var filename: String?
@@ -38,7 +40,8 @@ struct slox: ParsableCommand {
         do {
             let input = try String(contentsOf: url, encoding: .utf8)
             runString(input: input)
-            if Self.hadError { Self.exit(withError: ExitCode.failure) }
+            if Self.hadError { Self.exit(withError: ExitCode(65)) }
+            if Self.hadRuntimeError { Self.exit(withError: ExitCode(70)) }
         } catch {
             print(error)
         }
@@ -52,8 +55,8 @@ struct slox: ParsableCommand {
         let expr = p.parse()
         
         guard let expr = expr, !Self.hadError else { return }
-        
-        print("\(AstPrinter().print(expr: expr) ?? "")")
+
+        Self.interpreter.interpret(expr: expr)
     }
     
     static func error(line: UInt, message: String) {
@@ -66,6 +69,11 @@ struct slox: ParsableCommand {
         } else {
             report(line: token.line, where: " at '" + token.lexeme + "'", message: message)
         }
+    }
+    
+    static func runtimeError(_ error: RuntimeError) {
+        print("\(error.message) \n[line \(error.token.line)]")
+        hadRuntimeError = true
     }
     
     private static func report(line: UInt, where: String, message: String) {

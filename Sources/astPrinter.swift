@@ -9,7 +9,7 @@ import Foundation
 
 class AstPrinter: Visitor {
     func print(expr: Expr) -> String? {
-        let text: String? = expr.accept(visitor: self)
+        let text: String? = try? expr.accept(visitor: self)
         return text
     }
     
@@ -39,7 +39,7 @@ class AstPrinter: Visitor {
         str.append(name)
         for e in exprs {
             str.append(" ")
-            let text: String! = e.accept(visitor: self)
+            let text: String! = try? e.accept(visitor: self)
             str.append(text)
         }
         str.append(")")

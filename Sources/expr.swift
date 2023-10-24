@@ -1,13 +1,13 @@
 protocol Visitor<R> {
 	associatedtype R
-	func visitBinaryExpr(expr: Binary) -> R?
-	func visitGroupingExpr(expr: Grouping) -> R?
-	func visitLiteralExpr(expr: Literal) -> R?
-	func visitUnaryExpr(expr: Unary) -> R?
+	func visitBinaryExpr(expr: Binary) throws -> R?
+	func visitGroupingExpr(expr: Grouping) throws -> R?
+	func visitLiteralExpr(expr: Literal) throws -> R?
+	func visitUnaryExpr(expr: Unary) throws -> R?
 }
 
 class Expr {
-	func accept<R>(visitor: any Visitor) -> R? { return nil } 
+	func accept<R>(visitor: any Visitor) throws -> R? { return nil } 
 }
 
 class Binary: Expr {
@@ -19,7 +19,7 @@ class Binary: Expr {
 		self.op = op
 		self.right = right
 	}
-	override func accept<R>(visitor: any Visitor) -> R? { return visitor.visitBinaryExpr(expr: self) as? R }
+	override func accept<R>(visitor: any Visitor) throws -> R? { return try visitor.visitBinaryExpr(expr: self) as? R }
 
 }
 
@@ -28,7 +28,7 @@ class Grouping: Expr {
 	init(expression: Expr) {
 		self.expression = expression
 	}
-	override func accept<R>(visitor: any Visitor) -> R? { return visitor.visitGroupingExpr(expr: self) as? R }
+	override func accept<R>(visitor: any Visitor) throws -> R? { return try visitor.visitGroupingExpr(expr: self) as? R }
 
 }
 
@@ -37,7 +37,7 @@ class Literal: Expr {
 	init(value: Any?) {
 		self.value = value
 	}
-	override func accept<R>(visitor: any Visitor) -> R? { return visitor.visitLiteralExpr(expr: self) as? R }
+	override func accept<R>(visitor: any Visitor) throws -> R? { return try visitor.visitLiteralExpr(expr: self) as? R }
 
 }
 
@@ -48,7 +48,7 @@ class Unary: Expr {
 		self.op = op
 		self.right = right
 	}
-	override func accept<R>(visitor: any Visitor) -> R? { return visitor.visitUnaryExpr(expr: self) as? R }
+	override func accept<R>(visitor: any Visitor) throws -> R? { return try visitor.visitUnaryExpr(expr: self) as? R }
 
 }
 
