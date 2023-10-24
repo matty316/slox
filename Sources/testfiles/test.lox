@@ -1,13 +1,1 @@
-(){},.-+;*/
-! != = == < <= > >=
-
-// This is a comment
-
-/* this is a
-multiline comment */
-"This is a string"
-123 3 69 420
-
-num num2 longerIdent
-
-and class else false for fun if nil or print return super this true var while
+(1 + 2) * 4

@@ -48,13 +48,24 @@ struct slox: ParsableCommand {
         let s = Scanner(input: input)
         let tokens = s.scanTokens()
         
-        for t in tokens {
-            print(t)
-        }
+        let p =  Parser(tokens: tokens)
+        let expr = p.parse()
+        
+        guard let expr = expr, !Self.hadError else { return }
+        
+        print("\(AstPrinter().print(expr: expr) ?? "")")
     }
     
     static func error(line: UInt, message: String) {
         report(line: line, where: "", message: message)
+    }
+    
+    static func error(token: Token, message: String) {
+        if token.tokenType == .EOF {
+            report(line: token.line, where: " at end", message: message)
+        } else {
+            report(line: token.line, where: " at '" + token.lexeme + "'", message: message)
+        }
     }
     
     private static func report(line: UInt, where: String, message: String) {

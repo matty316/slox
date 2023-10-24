@@ -1,3 +1,5 @@
+import Foundation
+
 class Scanner {
     let input: String
     var tokens = [Token]()
