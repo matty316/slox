@@ -28,16 +28,77 @@ class Parser {
         self.tokens = tokens
     }
     
-    func parse() -> Expr? {
+    func parse() -> [Stmt] {
+        var statements = [Stmt]()
+        
+        while !isAtEnd {
+            guard let declaration = declaration() else { return statements }
+            statements.append(declaration)
+        }
+        
+        return statements
+    }
+    
+    private func declaration() -> Stmt? {
         do {
-            return try expression()
+            if match([.VAR]) { return try varDeclaration() }
+            return try statement()
         } catch {
+            synchronize()
             return nil
         }
     }
     
+    private func varDeclaration() throws -> Var {
+        let name = try consume(.IDENT, "expected var name")
+        
+        var initializer: Expr? = nil
+        if match([.EQ]) {
+            initializer = try expression()
+        }
+        
+        try consume(.SEMICOLON, "Expected a semicolon")
+        return Var(name: name, initializer: initializer)
+    }
+    
+    private func statement() throws -> Stmt {
+        if match([.PRINT]) { return try printStatement() }
+        
+        return try expressionStatement()
+    }
+    
+    private func printStatement() throws -> Print {
+        let val = try expression()
+        try consume(.SEMICOLON, "Expected a Semicolon")
+        return Print(expression: val)
+    }
+    
+    private func expressionStatement() throws -> Expression {
+        let expr = try expression()
+        try consume(.SEMICOLON, "Expected a Semicolon")
+        return Expression(expression: expr)
+    }
+    
     private func expression() throws -> Expr {
-        return try equality()
+        return try assignment()
+    }
+    
+    private func assignment() throws -> Expr {
+        let expr = try equality()
+        
+        if match([.EQ]) {
+            let equals = previous
+            let value = try assignment()
+            
+            if let expr = expr as? Variable {
+                let name = expr.name
+                return Assign(name: name, value: value)
+            }
+            
+            error(equals, "invalid assignment target")
+        }
+        
+        return expr
     }
     
     private func equality() throws -> Expr {
@@ -105,6 +166,10 @@ class Parser {
             return Literal(value: previous.literal)
         }
         
+        if match([.IDENT]) {
+            return Variable(name: previous)
+        }
+        
         if match([.LPAREN]) {
             let expr = try expression()
             try consume(.RPAREN, "Expect ')' after expression.")
@@ -142,6 +207,7 @@ class Parser {
         throw error(peek, message)
     }
     
+    @discardableResult
     private func error(_ token: Token, _ message: String) -> ParserError {
         slox.error(token: token, message: message)
         return ParserError.Generic

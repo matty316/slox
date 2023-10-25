@@ -52,11 +52,11 @@ struct slox: ParsableCommand {
         let tokens = s.scanTokens()
         
         let p =  Parser(tokens: tokens)
-        let expr = p.parse()
+        let stmts = p.parse()
         
-        guard let expr = expr, !Self.hadError else { return }
+        if Self.hadError { return }
 
-        Self.interpreter.interpret(expr: expr)
+        Self.interpreter.interpret(statements: stmts)
     }
     
     static func error(line: UInt, message: String) {

@@ -1,1 +1,4 @@
-(1 + 2) * 4
+var juice = "juice";
+var wrld = " wrld" + 999;
+wrld = "world";
+print juice + wrld;

@@ -7,18 +7,36 @@
 
 import Foundation
 
-class Interpreter: Visitor {
+class Interpreter: ExprVisitor, StmtVisitor {
     typealias R = Any
     
-    func interpret(expr: Expr) {
+    private var env = Env()
+    
+    func interpret(statements: [Stmt]) {
         do {
-            let val = try evaluate(expr)
-            print(stringify(val))
+            for stmt in statements {
+                try execute(stmt: stmt)
+            }
         } catch let error as RuntimeError {
             slox.runtimeError(error)
         } catch {
             print(error)
         }
+    }
+    
+    @discardableResult
+    func visitVarStmt(stmt: Var) throws -> R? {
+        var value: R? = nil
+        if let initializer = stmt.initializer {
+            value = try evaluate(initializer)
+        }
+        
+        env.define(name: stmt.name.lexeme, value: value)
+        return nil
+    }
+    
+    func visitVariableExpr(expr: Variable) throws -> R? {
+        return try env.get(name: expr.name)
     }
 
     func visitBinaryExpr(expr: Binary) throws -> R? {
@@ -49,14 +67,18 @@ class Interpreter: Visitor {
             if left is Double && right is Double {
                 return (left as! Double) + (right as! Double)
             }
-            if left is String && right is String {
-                return (left as! String) + (right as! String)
+            
+            if left is String || right is String {
+                return stringify(left) + stringify(right)
             }
             
-            throw RuntimeError(token: expr.op, message: "Operands must be two numbers or two strings")
+            throw RuntimeError(token: expr.op, message: "Operands must be two numbers or at least one string")
         case .SLASH:
             try checkNumberOps(expr.op, left, right)
-            return (left as! Double) / (right as! Double)
+            if (right as! Double) != 0 {
+                return (left as! Double) / (right as! Double)
+            }
+            throw RuntimeError(token: expr.op, message: "Cannot divide by zero")
         case .STAR:
             try checkNumberOps(expr.op, left, right)
             return (left as! Double) * (right as! Double)
@@ -85,7 +107,27 @@ class Interpreter: Visitor {
         }
     }
     
+    @discardableResult
+    func visitExpressionStmt(stmt: Expression) throws -> R? {
+        try evaluate(stmt.expression)
+        return nil
+    }
+    
+    @discardableResult
+    func visitPrintStmt(stmt: Print) throws -> R? {
+        let val = try evaluate(stmt.expression)
+        print(stringify(val))
+        return nil
+    }
+    
+    func visitAssignExpr(expr: Assign) throws -> R? {
+        let value = try evaluate(expr.value)
+        try env.assign(name: expr.name, value: value)
+        return value
+    }
+    
     //MARK: Helpers
+    @discardableResult
     func evaluate(_ expr: Expr) throws -> R? {
         return try expr.accept(visitor: self)
     }
@@ -129,5 +171,10 @@ class Interpreter: Visitor {
         }
         
         return expr as? String ?? ""
+    }
+    
+    @discardableResult
+    private func execute(stmt: Stmt) throws -> R? {
+        try stmt.accept(visitor: self)
     }
 }

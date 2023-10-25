@@ -154,7 +154,7 @@ class Scanner {
         
         let startIdx = input.index(after: start)
         let endIdx = input.index(before: current)
-        let val = input[startIdx..<endIdx]
+        let val = String(input[startIdx..<endIdx])
         addToken(.STRING, val)
     }
     
