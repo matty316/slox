@@ -52,6 +52,18 @@ class Interpreter: ExprVisitor, StmtVisitor {
         executeBlock(stmts: stmt.statements, env: Env(env: env))
     }
     
+    func visitLogicalExpr(expr: Logical) throws -> R? {
+        let left = try evaluate(expr.left)
+        
+        if expr.op.tokenType == .OR {
+            if isTruthy(left) { return left }
+        } else {
+            if !isTruthy(left) { return left }
+        }
+        
+        return try evaluate(expr.right)
+    }
+    
     @discardableResult
     func visitVarStmt(stmt: Var) throws -> R? {
         var value: R? = nil

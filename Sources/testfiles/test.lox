@@ -1,7 +1,7 @@
 var juice = "juice";
 var wrld = " wrld" + 999;
 
-if (false) {
+if (true or false) {
     print juice;
 } else {
     print wrld;

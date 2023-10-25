@@ -112,7 +112,7 @@ class Parser {
     }
     
     private func assignment() throws -> Expr {
-        let expr = try equality()
+        let expr = try or()
         
         if match([.EQ]) {
             let equals = previous
@@ -124,6 +124,30 @@ class Parser {
             }
             
             error(equals, "invalid assignment target")
+        }
+        
+        return expr
+    }
+    
+    private func or() throws -> Expr {
+        var expr = try and()
+        
+        while match([.OR]) {
+            let op = previous
+            let right = try and()
+            expr = Logical(left: expr, op: op, right: right)
+        }
+        
+        return expr
+    }
+    
+    private func and() throws -> Expr {
+        var expr = try equality()
+        
+        while match([.AND]) {
+            let op = previous
+            let right = try equality()
+            expr = Logical(left: expr, op: op, right: right)
         }
         
         return expr

@@ -4,6 +4,7 @@ protocol ExprVisitor<R> {
 	func visitBinaryExpr(expr: Binary) throws -> R?
 	func visitGroupingExpr(expr: Grouping) throws -> R?
 	func visitLiteralExpr(expr: Literal) throws -> R?
+	func visitLogicalExpr(expr: Logical) throws -> R?
 	func visitUnaryExpr(expr: Unary) throws -> R?
 	func visitVariableExpr(expr: Variable) throws -> R?
 }
@@ -37,6 +38,14 @@ struct Literal: Expr {
 	let value: Any?
 	@discardableResult
 	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitLiteralExpr(expr: self) as? R }
+}
+
+struct Logical: Expr {
+	let left: Expr
+	let op: Token
+	let right: Expr
+	@discardableResult
+	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitLogicalExpr(expr: self) as? R }
 }
 
 struct Unary: Expr {
