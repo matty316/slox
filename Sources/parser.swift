@@ -63,7 +63,7 @@ class Parser {
     
     private func statement() throws -> Stmt {
         if match([.PRINT]) { return try printStatement() }
-        
+        if match([.LBRACE]) { return Block(statements: try block() )}
         return try expressionStatement()
     }
     
@@ -71,6 +71,19 @@ class Parser {
         let val = try expression()
         try consume(.SEMICOLON, "Expected a Semicolon")
         return Print(expression: val)
+    }
+    
+    private func block() throws -> [Stmt] {
+        var stmts = [Stmt]()
+        
+        while !check(.RBRACE) && !isAtEnd {
+            if let declaration = declaration() {
+                stmts.append(declaration)
+            }
+        }
+        
+        try consume(.RBRACE, "Expected ] after block")
+        return stmts
     }
     
     private func expressionStatement() throws -> Expression {

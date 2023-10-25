@@ -2,3 +2,8 @@ var juice = "juice";
 var wrld = " wrld" + 999;
 wrld = "world";
 print juice + wrld;
+{
+    var juice = "ynw";
+    var b = "melly";
+    print juice + b;
+}

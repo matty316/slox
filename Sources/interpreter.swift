@@ -24,6 +24,10 @@ class Interpreter: ExprVisitor, StmtVisitor {
         }
     }
     
+    func visitBlockStmt(stmt: Block) throws -> R? {
+        executeBlock(stmts: stmt.statements, env: Env(env: env))
+    }
+    
     @discardableResult
     func visitVarStmt(stmt: Var) throws -> R? {
         var value: R? = nil
@@ -176,5 +180,23 @@ class Interpreter: ExprVisitor, StmtVisitor {
     @discardableResult
     private func execute(stmt: Stmt) throws -> R? {
         try stmt.accept(visitor: self)
+    }
+    
+    func executeBlock(stmts: [Stmt], env environment: Env) {
+        let previous = self.env
+        defer {
+            self.env = previous
+        }
+        do {
+            self.env = environment
+            
+            for stmt in stmts {
+                try execute(stmt: stmt)
+            }
+        } catch let error as RuntimeError {
+            slox.runtimeError(error)
+        } catch {
+            print(error)
+        }
     }
 }

@@ -11,6 +11,14 @@ class Env {
     private var values = [String: Any?]()
     var enclosing: Env?
     
+    init() {
+        self.enclosing = nil
+    }
+    
+    init(env: Env) {
+        self.enclosing = env
+    }
+    
     func define(name: String, value: Any?) {
         values[name] = value
     }

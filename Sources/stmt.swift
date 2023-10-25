@@ -11,7 +11,7 @@ protocol Stmt {
 }
 
 struct Block: Stmt {
-	statements: [Stmt]
+	var statements: [Stmt]
 	@discardableResult
 	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitBlockStmt(stmt: self) as? R }
 }
