@@ -12,6 +12,21 @@ class Interpreter: ExprVisitor, StmtVisitor {
     
     private var env = Env()
     
+    func interpretStmt(statement: Stmt) {
+        do {
+            if let statement = statement as? Expression {
+                let val = try evaluate(statement.expression)
+                print(stringify(val))
+            } else {
+                try execute(stmt: statement)
+            }
+        } catch let error as RuntimeError {
+            slox.runtimeError(error)
+        } catch {
+            print(error)
+        }
+    }
+    
     func interpret(statements: [Stmt]) {
         do {
             for stmt in statements {
@@ -182,7 +197,7 @@ class Interpreter: ExprVisitor, StmtVisitor {
         try stmt.accept(visitor: self)
     }
     
-    func executeBlock(stmts: [Stmt], env environment: Env) {
+    private func executeBlock(stmts: [Stmt], env environment: Env) {
         let previous = self.env
         defer {
             self.env = previous

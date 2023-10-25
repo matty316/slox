@@ -30,7 +30,12 @@ struct slox: ParsableCommand {
                 return
             }
             
-            runString(input: line)
+            let s = Scanner(input: line)
+            let tokens = s.scanTokens()
+            let p = Parser(tokens: tokens)
+            if let stmt = p.parse().first {
+                Self.interpreter.interpretStmt(statement: stmt)
+            }
             Self.hadError = false
         }
     }

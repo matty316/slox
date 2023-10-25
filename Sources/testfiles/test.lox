@@ -7,3 +7,5 @@ print juice + wrld;
     var b = "melly";
     print juice + b;
 }
+
+print 1 + 2;
