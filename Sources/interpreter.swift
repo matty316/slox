@@ -39,6 +39,15 @@ class Interpreter: ExprVisitor, StmtVisitor {
         }
     }
     
+    func visitIfStmt(stmt: If) throws -> R? {
+        if isTruthy(try evaluate(stmt.condition)) {
+            try execute(stmt: stmt.thenBranch)
+        } else if (stmt.elseBranch != nil) {
+            try execute(stmt: stmt.elseBranch!)
+        }
+        return nil
+    }
+    
     func visitBlockStmt(stmt: Block) throws -> R? {
         executeBlock(stmts: stmt.statements, env: Env(env: env))
     }

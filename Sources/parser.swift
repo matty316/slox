@@ -62,9 +62,24 @@ class Parser {
     }
     
     private func statement() throws -> Stmt {
+        if match([.IF]) { return try ifStatement() }
         if match([.PRINT]) { return try printStatement() }
         if match([.LBRACE]) { return Block(statements: try block() )}
         return try expressionStatement()
+    }
+    
+    private func ifStatement() throws -> If {
+        try consume(.LPAREN, "Expect '(' after 'if'")
+        let condition = try expression()
+        try consume(.RPAREN, "Expect ')' after 'if' condition")
+        
+        let thenBranch = try statement()
+        var elseBranch: Stmt?
+        if match([.ELSE]) {
+            elseBranch = try statement()
+        }
+        
+        return If(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
     }
     
     private func printStatement() throws -> Print {
