@@ -5,6 +5,7 @@ protocol StmtVisitor<R> {
 	func visitIfStmt(stmt: If) throws -> R?
 	func visitPrintStmt(stmt: Print) throws -> R?
 	func visitVarStmt(stmt: Var) throws -> R?
+	func visitWhileStmt(stmt: While) throws -> R?
 }
 
 protocol Stmt {
@@ -42,5 +43,12 @@ struct Var: Stmt {
 	let initializer: Expr?
 	@discardableResult
 	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitVarStmt(stmt: self) as? R }
+}
+
+struct While: Stmt {
+	let condition: Expr
+	let body: Stmt
+	@discardableResult
+	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitWhileStmt(stmt: self) as? R }
 }
 

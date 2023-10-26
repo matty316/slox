@@ -49,7 +49,7 @@ class Interpreter: ExprVisitor, StmtVisitor {
     }
     
     func visitBlockStmt(stmt: Block) throws -> R? {
-        executeBlock(stmts: stmt.statements, env: Env(env: env))
+        executeBlock(stmts: stmt.statements, newEnv: Env(env: env))
     }
     
     func visitLogicalExpr(expr: Logical) throws -> R? {
@@ -166,6 +166,13 @@ class Interpreter: ExprVisitor, StmtVisitor {
         return value
     }
     
+    func visitWhileStmt(stmt: While) throws -> R? {
+        while isTruthy(try evaluate(stmt.condition)) {
+            try execute(stmt: stmt.body)
+        }
+        return nil
+    }
+    
     //MARK: Helpers
     @discardableResult
     func evaluate(_ expr: Expr) throws -> R? {
@@ -208,6 +215,8 @@ class Interpreter: ExprVisitor, StmtVisitor {
                 text = String(text[start..<beforeEnd])
             }
             return text
+        } else if let expr = expr as? Bool {
+            return expr ? "true" : "false"
         }
         
         return expr as? String ?? ""
@@ -218,13 +227,13 @@ class Interpreter: ExprVisitor, StmtVisitor {
         try stmt.accept(visitor: self)
     }
     
-    private func executeBlock(stmts: [Stmt], env environment: Env) {
-        let previous = self.env
+    private func executeBlock(stmts: [Stmt], newEnv: Env) {
+        let previous = env
         defer {
-            self.env = previous
+            env = previous
         }
         do {
-            self.env = environment
+            self.env = newEnv
             
             for stmt in stmts {
                 try execute(stmt: stmt)

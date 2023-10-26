@@ -32,8 +32,11 @@ class Env {
     }
     
     func assign(name: Token, value: Any?) throws {
-        guard values[name.lexeme] != nil else {
-            if let enclosing = enclosing { try enclosing.assign(name: name, value: value) }
+        guard values.keys.contains(name.lexeme) else {
+            if let enclosing = enclosing { 
+                try enclosing.assign(name: name, value: value)
+                return
+            }
             throw RuntimeError(token: name, message: "Undefined var \(name.lexeme)")
         }
         

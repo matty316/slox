@@ -64,6 +64,7 @@ class Parser {
     private func statement() throws -> Stmt {
         if match([.IF]) { return try ifStatement() }
         if match([.PRINT]) { return try printStatement() }
+        if match([.WHILE]) { return try whileStatment() }
         if match([.LBRACE]) { return Block(statements: try block() )}
         return try expressionStatement()
     }
@@ -86,6 +87,14 @@ class Parser {
         let val = try expression()
         try consume(.SEMICOLON, "Expected a Semicolon")
         return Print(expression: val)
+    }
+    
+    private func whileStatment() throws -> While {
+        try consume(.LPAREN, "expected left paren")
+        let condition = try expression()
+        try consume(.RPAREN, "expected right paren")
+        let stmt = try statement()
+        return While(condition: condition, body: stmt)
     }
     
     private func block() throws -> [Stmt] {

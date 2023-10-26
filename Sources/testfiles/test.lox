@@ -6,3 +6,10 @@ if (true or false) {
 } else {
     print wrld;
 }
+
+var i = 0;
+
+while (i < 3) {
+    print juice;
+    i = i + 1;
+}
