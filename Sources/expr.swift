@@ -8,6 +8,7 @@ protocol ExprVisitor<R> {
 	func visitLogicalExpr(expr: Logical) throws -> R?
 	func visitUnaryExpr(expr: Unary) throws -> R?
 	func visitVariableExpr(expr: Variable) throws -> R?
+	func visitFunExpr(expr: Fun) throws -> R?
 }
 
 protocol Expr {
@@ -68,5 +69,12 @@ struct Variable: Expr {
 	let name: Token
 	@discardableResult
 	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitVariableExpr(expr: self) as? R }
+}
+
+struct Fun: Expr {
+	let params: [Token]
+	let body: [Stmt]
+	@discardableResult
+	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitFunExpr(expr: self) as? R }
 }
 

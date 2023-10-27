@@ -40,7 +40,10 @@ class Parser {
     
     private func declaration() -> Stmt? {
         do {
-            if match([.FUN]) { return try function(kind: "function") }
+            if check(.FUN) && checkNext(.IDENT) {
+                try consume(.FUN, "")
+                return try function(kind: "function")
+            }
             if match([.VAR]) { return try varDeclaration() }
             return try statement()
         } catch {
@@ -49,8 +52,12 @@ class Parser {
         }
     }
     
-    private func function(kind: String) throws -> Stmt {
+    private func function(kind: String) throws -> Function {
         let name = try consume(.IDENT, "Expect \(kind) name.")
+        return try Function(name: name, function: functionBody(kind: kind))
+    }
+    
+    private func functionBody(kind: String) throws -> Fun {
         try consume(.LPAREN, "Expected left paren")
         var params = [Token]()
         if !check(.RPAREN) {
@@ -65,7 +72,7 @@ class Parser {
         try consume(.RPAREN, "expected right paren after params")
         try consume(.LBRACE, "Expect right brace before \(kind) body")
         let body = try block()
-        return Function(name: name, params: params, body: body)
+        return Fun(params: params, body: body)
     }
     
     private func varDeclaration() throws -> Var {
@@ -342,7 +349,7 @@ class Parser {
         if match([.FALSE]) { return Literal(value: false) }
         if match([.TRUE]) { return Literal(value: true) }
         if match([.NIL]) { return Literal(value: nil) }
-        
+        if match([.FUN]) { return try functionBody(kind: "function") }
         if match([.NUM, .STRING]) {
             return Literal(value: previous.literal)
         }
@@ -373,6 +380,12 @@ class Parser {
     private func check(_ tokenType: TokenType) -> Bool {
         if isAtEnd { return false }
         return peek.tokenType == tokenType
+    }
+    
+    private func checkNext(_ tokenType: TokenType) -> Bool {
+        if isAtEnd { return false }
+        if tokens[current + 1].tokenType == .EOF { return false }
+        return tokens[current + 1].tokenType == tokenType
     }
     
     @discardableResult

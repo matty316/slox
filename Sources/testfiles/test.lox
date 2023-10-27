@@ -31,17 +31,3 @@ fun slide4(von) {
 }
 
 print freeRondo(9) + " " + slide4("von");
-
-fun makeCounter() {
-    var i = 0;
-    fun count() {
-        i = i + 1;
-        print i;
-    }
-    
-    return count;
-}
-
-var counter = makeCounter();
-counter();
-counter();

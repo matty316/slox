@@ -62,8 +62,7 @@ struct Break: Stmt {
 
 struct Function: Stmt {
 	let name: Token
-	let params: [Token]
-	let body: [Stmt]
+	let function: Fun
 	@discardableResult
 	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitFunctionStmt(stmt: self) as? R }
 }

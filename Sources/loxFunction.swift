@@ -11,10 +11,12 @@ struct LoxFunction: LoxCallable {
     var arity: Int {
         declaration.params.count
     }
-    private let declaration: Function
+    private let name: String?
+    private let declaration: Fun
     private var closure: Env
     
-    init(declaration: Function, closure: Env) {
+    init(name: String? = nil, declaration: Fun, closure: Env) {
+        self.name = name
         self.declaration = declaration
         self.closure = closure
     }
@@ -34,6 +36,6 @@ struct LoxFunction: LoxCallable {
     }
     
     func toString() -> String {
-        "<fn \(declaration.name.lexeme)>"
+        "<fn \(name ?? "")>"
     }
 }

@@ -38,9 +38,13 @@ class Interpreter: ExprVisitor, StmtVisitor {
     }
     
     func visitFunctionStmt(stmt: Function) throws -> R? {
-        let function = LoxFunction(declaration: stmt, closure: env)
+        let function = LoxFunction(name: stmt.name.lexeme, declaration: stmt.function, closure: env)
         env.define(name: stmt.name.lexeme, value: function)
         return nil
+    }
+    
+    func visitFunExpr(expr: Fun) throws -> R? {
+        return LoxFunction(declaration: expr, closure: env)
     }
     
     func interpret(statements: [Stmt]) {
