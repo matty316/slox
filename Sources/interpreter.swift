@@ -8,6 +8,10 @@
 import Foundation
 
 class Interpreter: ExprVisitor, StmtVisitor {
+    enum BreakError: Error {
+        case General
+    }
+    
     typealias R = Any
     
     private var env = Env()
@@ -22,6 +26,8 @@ class Interpreter: ExprVisitor, StmtVisitor {
             }
         } catch let error as RuntimeError {
             slox.runtimeError(error)
+        } catch is BreakError {
+            //no-op
         } catch {
             print(error)
         }
@@ -34,6 +40,8 @@ class Interpreter: ExprVisitor, StmtVisitor {
             }
         } catch let error as RuntimeError {
             slox.runtimeError(error)
+        } catch is BreakError {
+            //no-op
         } catch {
             print(error)
         }
@@ -49,7 +57,7 @@ class Interpreter: ExprVisitor, StmtVisitor {
     }
     
     func visitBlockStmt(stmt: Block) throws -> R? {
-        executeBlock(stmts: stmt.statements, newEnv: Env(env: env))
+        try executeBlock(stmts: stmt.statements, newEnv: Env(env: env))
     }
     
     func visitLogicalExpr(expr: Logical) throws -> R? {
@@ -147,6 +155,10 @@ class Interpreter: ExprVisitor, StmtVisitor {
         }
     }
     
+    func visitBreakStmt(stmt: Break) throws -> R? {
+        throw BreakError.General
+    }
+    
     @discardableResult
     func visitExpressionStmt(stmt: Expression) throws -> R? {
         try evaluate(stmt.expression)
@@ -168,7 +180,13 @@ class Interpreter: ExprVisitor, StmtVisitor {
     
     func visitWhileStmt(stmt: While) throws -> R? {
         while isTruthy(try evaluate(stmt.condition)) {
-            try execute(stmt: stmt.body)
+            do {
+                try execute(stmt: stmt.body)
+            } catch is BreakError {
+                break
+            } catch {
+                throw error
+            }
         }
         return nil
     }
@@ -227,7 +245,7 @@ class Interpreter: ExprVisitor, StmtVisitor {
         try stmt.accept(visitor: self)
     }
     
-    private func executeBlock(stmts: [Stmt], newEnv: Env) {
+    private func executeBlock(stmts: [Stmt], newEnv: Env) throws {
         let previous = env
         defer {
             env = previous
@@ -240,6 +258,8 @@ class Interpreter: ExprVisitor, StmtVisitor {
             }
         } catch let error as RuntimeError {
             slox.runtimeError(error)
+        } catch let error as BreakError {
+            throw error
         } catch {
             print(error)
         }

@@ -1,15 +1,10 @@
 var juice = "juice";
-var wrld = " wrld" + 999;
+var wrld = " wrld";
 
-if (true or false) {
-    print juice;
-} else {
-    print wrld;
+for (var i = 0; i < 5; i = i + 1) {
+    print i;
+    if (i > 3) {
+        break;
+    }
 }
 
-var i = 0;
-
-while (i < 3) {
-    print juice;
-    i = i + 1;
-}

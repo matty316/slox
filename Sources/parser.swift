@@ -11,7 +11,6 @@ class Parser {
     enum ParserError: Error {
         case Generic
     }
-    
     private let tokens: [Token]
     private var current = 0
     private var isAtEnd: Bool {
@@ -32,17 +31,17 @@ class Parser {
         var statements = [Stmt]()
         
         while !isAtEnd {
-            guard let declaration = declaration() else { return statements }
+            guard let declaration = declaration(isInLoop: false) else { return statements }
             statements.append(declaration)
         }
         
         return statements
     }
     
-    private func declaration() -> Stmt? {
+    private func declaration(isInLoop: Bool) -> Stmt? {
         do {
             if match([.VAR]) { return try varDeclaration() }
-            return try statement()
+            return try statement(isInLoop: isInLoop)
         } catch {
             synchronize()
             return nil
@@ -61,23 +60,74 @@ class Parser {
         return Var(name: name, initializer: initializer)
     }
     
-    private func statement() throws -> Stmt {
-        if match([.IF]) { return try ifStatement() }
+    private func statement(isInLoop: Bool) throws -> Stmt {
+        if match([.FOR]) { return try forStatement() }
+        if match([.IF]) { return try ifStatement(isInLoop: isInLoop) }
         if match([.PRINT]) { return try printStatement() }
-        if match([.WHILE]) { return try whileStatment() }
-        if match([.LBRACE]) { return Block(statements: try block() )}
+        if match([.BREAK]) {
+            if isInLoop {
+                return try breakStatement()
+            } else {
+                throw self.error(previous, "cannot have break outside loop")
+            }
+        }
+        if match([.WHILE]) { return try whileStatement() }
+        if match([.LBRACE]) { return Block(statements: try block(isInLoop: isInLoop) )}
         return try expressionStatement()
     }
     
-    private func ifStatement() throws -> If {
+    private func forStatement() throws -> Stmt {
+        try consume(.LPAREN, "expected left paren")
+        
+        var initializer: Stmt?
+        if match([.SEMICOLON]) {
+            initializer = nil
+        } else if match([.VAR]) {
+            initializer = try varDeclaration()
+        } else {
+            initializer = try expressionStatement()
+        }
+        
+        var condition: Expr? = nil
+        if !check(.SEMICOLON) {
+            condition = try expression()
+        }
+        try consume(.SEMICOLON, "expected a semicolon after condition")
+        
+        var increment: Expr? = nil
+        if !check(.RPAREN) {
+            increment = try expression()
+        }
+        try consume(.RPAREN, "expected a right paren")
+        
+        var body = try statement(isInLoop: true)
+        
+        if let increment = increment {
+            body = Block(statements: [body, Expression(expression: increment)])
+        }
+        
+        if let condition = condition {
+            body = While(condition: condition, body: body)
+        } else {
+            body = While(condition: Literal(value: true), body: body)
+        }
+        
+        if let initializer = initializer {
+            body = Block(statements: [initializer, body])
+        }
+        
+        return body
+    }
+    
+    private func ifStatement(isInLoop: Bool) throws -> If {
         try consume(.LPAREN, "Expect '(' after 'if'")
         let condition = try expression()
         try consume(.RPAREN, "Expect ')' after 'if' condition")
         
-        let thenBranch = try statement()
+        let thenBranch = try statement(isInLoop: isInLoop)
         var elseBranch: Stmt?
         if match([.ELSE]) {
-            elseBranch = try statement()
+            elseBranch = try statement(isInLoop: isInLoop)
         }
         
         return If(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
@@ -89,25 +139,31 @@ class Parser {
         return Print(expression: val)
     }
     
-    private func whileStatment() throws -> While {
+    private func whileStatement() throws -> While {
         try consume(.LPAREN, "expected left paren")
         let condition = try expression()
         try consume(.RPAREN, "expected right paren")
-        let stmt = try statement()
+        let stmt = try statement(isInLoop: true)
         return While(condition: condition, body: stmt)
     }
     
-    private func block() throws -> [Stmt] {
+    private func block(isInLoop: Bool) throws -> [Stmt] {
         var stmts = [Stmt]()
         
         while !check(.RBRACE) && !isAtEnd {
-            if let declaration = declaration() {
+            if let declaration = declaration(isInLoop: isInLoop) {
                 stmts.append(declaration)
             }
         }
         
-        try consume(.RBRACE, "Expected ] after block")
+        try consume(.RBRACE, "Expected } after block")
         return stmts
+    }
+    
+    private func breakStatement() throws -> Stmt {
+        let stmt = Break()
+        try consume(.SEMICOLON, "expected a semicolon after break")
+        return stmt
     }
     
     private func expressionStatement() throws -> Expression {

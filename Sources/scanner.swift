@@ -25,6 +25,7 @@ class Scanner {
             "true": .TRUE,
             "var": .VAR,
             "while": .WHILE,
+            "break": .BREAK,
         ]
     }
     
