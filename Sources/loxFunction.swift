@@ -11,14 +11,16 @@ struct LoxFunction: LoxCallable {
     var arity: Int {
         declaration.params.count
     }
-    let declaration: Function
+    private let declaration: Function
+    private var closure: Env
     
-    init(declaration: Function) {
+    init(declaration: Function, closure: Env) {
         self.declaration = declaration
+        self.closure = closure
     }
     
     func call(interpreter: Interpreter, args: [Any?]) throws -> Any? {
-        let env = Env(env: interpreter.globals)
+        let env = Env(env: closure)
         for (i, p) in declaration.params.enumerated() {
             env.define(name: p.lexeme, value: args[i])
         }

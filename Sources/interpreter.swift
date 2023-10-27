@@ -38,7 +38,7 @@ class Interpreter: ExprVisitor, StmtVisitor {
     }
     
     func visitFunctionStmt(stmt: Function) throws -> R? {
-        let function = LoxFunction(declaration: stmt)
+        let function = LoxFunction(declaration: stmt, closure: env)
         env.define(name: stmt.name.lexeme, value: function)
         return nil
     }
