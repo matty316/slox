@@ -9,5 +9,6 @@ import Foundation
 
 protocol LoxCallable {
     var arity: Int { get }
-    func call(interpreter: Interpreter, args: [Any?]) -> Any?
+    func call(interpreter: Interpreter, args: [Any?]) throws -> Any?
+    func toString() -> String
 }

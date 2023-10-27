@@ -48,7 +48,7 @@ struct slox: ParsableCommand {
             if Self.hadError { Self.exit(withError: ExitCode(65)) }
             if Self.hadRuntimeError { Self.exit(withError: ExitCode(70)) }
         } catch {
-            print(error)
+           
         }
     }
     

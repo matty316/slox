@@ -8,9 +8,7 @@
 import Foundation
 
 class Parser {
-    enum ParserError: Error {
-        case Generic
-    }
+    struct ParserError: Error {}
     private let tokens: [Token]
     private var current = 0
     private var isAtEnd: Bool {
@@ -23,6 +21,8 @@ class Parser {
         tokens[current - 1]
     }
     
+    var loopDepth = 0
+    
     init(tokens: [Token]) {
         self.tokens = tokens
     }
@@ -31,21 +31,41 @@ class Parser {
         var statements = [Stmt]()
         
         while !isAtEnd {
-            guard let declaration = declaration(isInLoop: false) else { return statements }
+            guard let declaration = declaration() else { return statements }
             statements.append(declaration)
         }
         
         return statements
     }
     
-    private func declaration(isInLoop: Bool) -> Stmt? {
+    private func declaration() -> Stmt? {
         do {
+            if match([.FUN]) { return try function(kind: "function") }
             if match([.VAR]) { return try varDeclaration() }
-            return try statement(isInLoop: isInLoop)
+            return try statement()
         } catch {
             synchronize()
             return nil
         }
+    }
+    
+    private func function(kind: String) throws -> Stmt {
+        let name = try consume(.IDENT, "Expect \(kind) name.")
+        try consume(.LPAREN, "Expected left paren")
+        var params = [Token]()
+        if !check(.RPAREN) {
+            repeat {
+                if params.count >= 255 {
+                    error(peek, "cannot have more that 255 params")
+                }
+                
+                params.append(try consume(.IDENT, "expect param name"))
+            } while match([.COMMA])
+        }
+        try consume(.RPAREN, "expected right paren after params")
+        try consume(.LBRACE, "Expect right brace before \(kind) body")
+        let body = try block()
+        return Function(name: name, params: params, body: body)
     }
     
     private func varDeclaration() throws -> Var {
@@ -60,20 +80,32 @@ class Parser {
         return Var(name: name, initializer: initializer)
     }
     
-    private func statement(isInLoop: Bool) throws -> Stmt {
+    private func statement() throws -> Stmt {
         if match([.FOR]) { return try forStatement() }
-        if match([.IF]) { return try ifStatement(isInLoop: isInLoop) }
+        if match([.IF]) { return try ifStatement() }
         if match([.PRINT]) { return try printStatement() }
+        if match([.RETURN]) { return try returnStatement() }
         if match([.BREAK]) {
-            if isInLoop {
+            if loopDepth > 0 {
                 return try breakStatement()
             } else {
                 throw self.error(previous, "cannot have break outside loop")
             }
         }
         if match([.WHILE]) { return try whileStatement() }
-        if match([.LBRACE]) { return Block(statements: try block(isInLoop: isInLoop) )}
+        if match([.LBRACE]) { return Block(statements: try block() )}
         return try expressionStatement()
+    }
+    
+    private func returnStatement() throws -> Return {
+        let keyword = previous
+        var value: Expr? = nil
+        if !check(.SEMICOLON) {
+            value = try expression()
+        }
+        
+        try consume(.SEMICOLON, "expect semicolon after return")
+        return Return(keyword: keyword, value: value)
     }
     
     private func forStatement() throws -> Stmt {
@@ -99,8 +131,8 @@ class Parser {
             increment = try expression()
         }
         try consume(.RPAREN, "expected a right paren")
-        
-        var body = try statement(isInLoop: true)
+        loopDepth += 1
+        var body = try statement()
         
         if let increment = increment {
             body = Block(statements: [body, Expression(expression: increment)])
@@ -115,19 +147,19 @@ class Parser {
         if let initializer = initializer {
             body = Block(statements: [initializer, body])
         }
-        
+        loopDepth -= 1
         return body
     }
     
-    private func ifStatement(isInLoop: Bool) throws -> If {
+    private func ifStatement() throws -> If {
         try consume(.LPAREN, "Expect '(' after 'if'")
         let condition = try expression()
         try consume(.RPAREN, "Expect ')' after 'if' condition")
         
-        let thenBranch = try statement(isInLoop: isInLoop)
+        let thenBranch = try statement()
         var elseBranch: Stmt?
         if match([.ELSE]) {
-            elseBranch = try statement(isInLoop: isInLoop)
+            elseBranch = try statement()
         }
         
         return If(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
@@ -140,18 +172,20 @@ class Parser {
     }
     
     private func whileStatement() throws -> While {
+        loopDepth += 1
         try consume(.LPAREN, "expected left paren")
         let condition = try expression()
         try consume(.RPAREN, "expected right paren")
-        let stmt = try statement(isInLoop: true)
+        let stmt = try statement()
+        loopDepth -= 1
         return While(condition: condition, body: stmt)
     }
     
-    private func block(isInLoop: Bool) throws -> [Stmt] {
+    private func block() throws -> [Stmt] {
         var stmts = [Stmt]()
         
         while !check(.RBRACE) && !isAtEnd {
-            if let declaration = declaration(isInLoop: isInLoop) {
+            if let declaration = declaration() {
                 stmts.append(declaration)
             }
         }
@@ -357,7 +391,7 @@ class Parser {
     @discardableResult
     private func error(_ token: Token, _ message: String) -> ParserError {
         slox.error(token: token, message: message)
-        return ParserError.Generic
+        return ParserError()
     }
     
     private func synchronize() {

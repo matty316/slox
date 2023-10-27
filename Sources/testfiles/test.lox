@@ -1,11 +1,42 @@
-var juice = "juice";
-var wrld = " wrld";
+var juice = "juice ";
+var wrld = "wrld ";
+
+print juice + wrld + 999;
 
 print clock();
 
 for (var i = 0; i < 5; i = i + 1) {
     print i;
-    if (i > 3) {
+    if (i > 1) {
         break;
     }
+}
+
+var i = 0;
+while (i < 5) {
+    print i;
+    if (i > 1) {
+        break;
+    }
+    i = i + 1;
+}
+
+fun freeRondo(numba) {
+    return "free rondo numba " + numba;
+}
+
+fun slide4(von) {
+    var slide = "slide 4 ";
+    return slide + von;
+}
+
+print freeRondo(9) + " " + slide4("von");
+
+fun fib(n) {
+    if (n <= 1) return n;
+    return fib(n - 2) + fib(n - 1);
+}
+
+for (var i = 0; i < 20; i = i + 1) {
+    print fib(i);
 }

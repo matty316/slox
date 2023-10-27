@@ -7,6 +7,8 @@ protocol StmtVisitor<R> {
 	func visitVarStmt(stmt: Var) throws -> R?
 	func visitWhileStmt(stmt: While) throws -> R?
 	func visitBreakStmt(stmt: Break) throws -> R?
+	func visitFunctionStmt(stmt: Function) throws -> R?
+	func visitReturnStmt(stmt: Return) throws -> R?
 }
 
 protocol Stmt {
@@ -56,5 +58,20 @@ struct While: Stmt {
 struct Break: Stmt {
 	@discardableResult
 	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitBreakStmt(stmt: self) as? R }
+}
+
+struct Function: Stmt {
+	let name: Token
+	let params: [Token]
+	let body: [Stmt]
+	@discardableResult
+	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitFunctionStmt(stmt: self) as? R }
+}
+
+struct Return: Stmt {
+	let keyword: Token
+	let value: Expr?
+	@discardableResult
+	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitReturnStmt(stmt: self) as? R }
 }
 

@@ -8,22 +8,12 @@
 import Foundation
 
 class Interpreter: ExprVisitor, StmtVisitor {
-    enum BreakError: Error {
-        case General
-    }
+    struct BreakInterupt: Error {}
     
     typealias R = Any
     
     var globals = Env()
     private var env: Env
-    
-    struct Clock: LoxCallable {
-        var arity = 0
-        
-        func call(interpreter: Interpreter, args: [Any?]) -> Any? {
-            Date().timeIntervalSince1970
-        }
-    }
     
     init() {
         self.env = globals
@@ -40,11 +30,17 @@ class Interpreter: ExprVisitor, StmtVisitor {
             }
         } catch let error as RuntimeError {
             slox.runtimeError(error)
-        } catch is BreakError {
+        } catch is BreakInterupt {
             //no-op
         } catch {
-            print(error)
+            
         }
+    }
+    
+    func visitFunctionStmt(stmt: Function) throws -> R? {
+        let function = LoxFunction(declaration: stmt)
+        env.define(name: stmt.name.lexeme, value: function)
+        return nil
     }
     
     func interpret(statements: [Stmt]) {
@@ -54,10 +50,10 @@ class Interpreter: ExprVisitor, StmtVisitor {
             }
         } catch let error as RuntimeError {
             slox.runtimeError(error)
-        } catch is BreakError {
+        } catch is BreakInterupt {
             //no-op
         } catch {
-            print(error)
+            
         }
     }
     
@@ -104,9 +100,7 @@ class Interpreter: ExprVisitor, StmtVisitor {
             throw RuntimeError(token: expr.paren, message: "expect \(function.arity) args but got \(args.count)")
         }
         
-        
-        
-        return function.call(interpreter: self, args: args)
+        return try function.call(interpreter: self, args: args)
     }
     
     @discardableResult
@@ -193,7 +187,14 @@ class Interpreter: ExprVisitor, StmtVisitor {
     }
     
     func visitBreakStmt(stmt: Break) throws -> R? {
-        throw BreakError.General
+        throw BreakInterupt()
+    }
+    
+    func visitReturnStmt(stmt: Return) throws -> R? {
+        var value: Any? = nil
+        if let stmtVal = stmt.value { value = try evaluate(stmtVal) }
+        
+        throw ReturnInterupt(value: value)
     }
     
     @discardableResult
@@ -219,7 +220,7 @@ class Interpreter: ExprVisitor, StmtVisitor {
         while isTruthy(try evaluate(stmt.condition)) {
             do {
                 try execute(stmt: stmt.body)
-            } catch is BreakError {
+            } catch is BreakInterupt {
                 break
             } catch {
                 throw error
@@ -282,7 +283,7 @@ class Interpreter: ExprVisitor, StmtVisitor {
         try stmt.accept(visitor: self)
     }
     
-    private func executeBlock(stmts: [Stmt], newEnv: Env) throws {
+    func executeBlock(stmts: [Stmt], newEnv: Env) throws {
         let previous = env
         defer {
             env = previous
@@ -295,10 +296,8 @@ class Interpreter: ExprVisitor, StmtVisitor {
             }
         } catch let error as RuntimeError {
             slox.runtimeError(error)
-        } catch let error as BreakError {
+        } catch let error as BreakInterupt {
             throw error
-        } catch {
-            print(error)
         }
     }
 }
