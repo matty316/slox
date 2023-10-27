@@ -271,7 +271,37 @@ class Parser {
             return Unary(op: op, right: right)
         }
         
-        return try primary()
+        return try call()
+    }
+    
+    private func call() throws -> Expr {
+        var expr = try primary()
+        
+        while true {
+            if match([.LPAREN]) {
+                expr = try finishCall(callee: expr)
+            } else {
+                break
+            }
+        }
+        
+        return expr
+    }
+    
+    private func finishCall(callee: Expr) throws -> Expr {
+        var args = [Expr]()
+        if !check(.RPAREN) {
+            repeat {
+                if args.count >= 255 {
+                    error(peek, "cant have more that 255 args")
+                }
+                args.append(try expression())
+            } while match([.COMMA])
+        }
+        
+        let paren = try consume(.RPAREN, "expected right paren")
+        
+        return Call(callee: callee, paren: paren, args: args)
     }
     
     private func primary() throws -> Expr {

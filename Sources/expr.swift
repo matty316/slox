@@ -2,6 +2,7 @@ protocol ExprVisitor<R> {
 	associatedtype R
 	func visitAssignExpr(expr: Assign) throws -> R?
 	func visitBinaryExpr(expr: Binary) throws -> R?
+	func visitCallExpr(expr: Call) throws -> R?
 	func visitGroupingExpr(expr: Grouping) throws -> R?
 	func visitLiteralExpr(expr: Literal) throws -> R?
 	func visitLogicalExpr(expr: Logical) throws -> R?
@@ -26,6 +27,14 @@ struct Binary: Expr {
 	let right: Expr
 	@discardableResult
 	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitBinaryExpr(expr: self) as? R }
+}
+
+struct Call: Expr {
+	let callee: Expr
+	let paren: Token
+	let args: [Expr]
+	@discardableResult
+	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitCallExpr(expr: self) as? R }
 }
 
 struct Grouping: Expr {

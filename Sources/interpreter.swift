@@ -14,7 +14,21 @@ class Interpreter: ExprVisitor, StmtVisitor {
     
     typealias R = Any
     
-    private var env = Env()
+    var globals = Env()
+    private var env: Env
+    
+    struct Clock: LoxCallable {
+        var arity = 0
+        
+        func call(interpreter: Interpreter, args: [Any?]) -> Any? {
+            Date().timeIntervalSince1970
+        }
+    }
+    
+    init() {
+        self.env = globals
+        globals.define(name: "clock", value: Clock())
+    }
     
     func interpretStmt(statement: Stmt) {
         do {
@@ -70,6 +84,29 @@ class Interpreter: ExprVisitor, StmtVisitor {
         }
         
         return try evaluate(expr.right)
+    }
+    
+    func visitCallExpr(expr: Call) throws -> R? {
+        let callee = try evaluate(expr.callee)
+        
+        var args = [Any?]()
+        for arg in expr.args {
+            args.append(try evaluate(arg))
+        }
+        
+        guard let callee = callee as? LoxCallable else {
+            throw RuntimeError(token: expr.paren, message: "can only call functions and classes")
+        }
+        
+        let function = callee
+        
+        guard args.count == function.arity else {
+            throw RuntimeError(token: expr.paren, message: "expect \(function.arity) args but got \(args.count)")
+        }
+        
+        
+        
+        return function.call(interpreter: self, args: args)
     }
     
     @discardableResult
