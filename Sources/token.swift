@@ -17,4 +17,6 @@ struct Token {
     let lexeme: String
     let literal: Any?
     let line: UInt
+    
+    var toString: String { "\(tokenType.hashValue)\(lexeme)\(literal ?? "")\(line)" }
 }

@@ -31,3 +31,15 @@ fun slide4(von) {
 }
 
 print freeRondo(9) + " " + slide4("von");
+
+var a = "global";
+
+{
+    fun showA() {
+        print a;
+    }
+    
+    showA();
+    var a = "block";
+    showA();
+}

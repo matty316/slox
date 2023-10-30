@@ -15,7 +15,7 @@ struct slox: ParsableCommand {
     
     mutating func run() throws {
         if let filename = filename {
-            runFile(filename: filename)
+            try runFile(filename: filename)
         } else {
             runPrompt()
         }
@@ -40,11 +40,11 @@ struct slox: ParsableCommand {
         }
     }
     
-    func runFile(filename: String) {
+    func runFile(filename: String) throws {
         let url = URL(fileURLWithPath: filename)
         do {
             let input = try String(contentsOf: url, encoding: .utf8)
-            runString(input: input)
+            try runString(input: input)
             if Self.hadError { Self.exit(withError: ExitCode(65)) }
             if Self.hadRuntimeError { Self.exit(withError: ExitCode(70)) }
         } catch {
@@ -52,7 +52,7 @@ struct slox: ParsableCommand {
         }
     }
     
-    func runString(input: String) {
+    func runString(input: String) throws {
         let s = Scanner(input: input)
         let tokens = s.scanTokens()
         
@@ -60,7 +60,12 @@ struct slox: ParsableCommand {
         let stmts = p.parse()
         
         if Self.hadError { return }
-
+        
+        let resolver = Resolver(interpreter: Self.interpreter)
+        try resolver.resolve(stmts: stmts)
+        
+        if Self.hadError { return }
+        
         Self.interpreter.interpret(statements: stmts)
     }
     

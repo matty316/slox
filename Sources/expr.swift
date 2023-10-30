@@ -11,70 +11,106 @@ protocol ExprVisitor<R> {
 	func visitFunExpr(expr: Fun) throws -> R?
 }
 
-protocol Expr {
-	func accept<R>(visitor: any ExprVisitor) throws -> R?
+class Expr {
+	func accept<R>(visitor: any ExprVisitor) throws -> R? { return nil }
 }
 
-struct Assign: Expr {
+class Assign: Expr {
 	let name: Token
 	let value: Expr
+	init(name: Token, value: Expr) {
+		self.name = name
+		self.value = value
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitAssignExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitAssignExpr(expr: self) as? R }
 }
 
-struct Binary: Expr {
+class Binary: Expr {
 	let left: Expr
 	let op: Token
 	let right: Expr
+	init(left: Expr, op: Token, right: Expr) {
+		self.left = left
+		self.op = op
+		self.right = right
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitBinaryExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitBinaryExpr(expr: self) as? R }
 }
 
-struct Call: Expr {
+class Call: Expr {
 	let callee: Expr
 	let paren: Token
 	let args: [Expr]
+	init(callee: Expr, paren: Token, args: [Expr]) {
+		self.callee = callee
+		self.paren = paren
+		self.args = args
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitCallExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitCallExpr(expr: self) as? R }
 }
 
-struct Grouping: Expr {
+class Grouping: Expr {
 	let expression: Expr
+	init(expression: Expr) {
+		self.expression = expression
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitGroupingExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitGroupingExpr(expr: self) as? R }
 }
 
-struct Literal: Expr {
+class Literal: Expr {
 	let value: Any?
+	init(value: Any?) {
+		self.value = value
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitLiteralExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitLiteralExpr(expr: self) as? R }
 }
 
-struct Logical: Expr {
+class Logical: Expr {
 	let left: Expr
 	let op: Token
 	let right: Expr
+	init(left: Expr, op: Token, right: Expr) {
+		self.left = left
+		self.op = op
+		self.right = right
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitLogicalExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitLogicalExpr(expr: self) as? R }
 }
 
-struct Unary: Expr {
+class Unary: Expr {
 	let op: Token
 	let right: Expr
+	init(op: Token, right: Expr) {
+		self.op = op
+		self.right = right
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitUnaryExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitUnaryExpr(expr: self) as? R }
 }
 
-struct Variable: Expr {
+class Variable: Expr {
 	let name: Token
+	init(name: Token) {
+		self.name = name
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitVariableExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitVariableExpr(expr: self) as? R }
 }
 
-struct Fun: Expr {
+class Fun: Expr {
 	let params: [Token]
 	let body: [Stmt]
+	init(params: [Token], body: [Stmt]) {
+		self.params = params
+		self.body = body
+	}
 	@discardableResult
-	func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitFunExpr(expr: self) as? R }
+	override func accept<R>(visitor: any ExprVisitor) throws -> R? { return try visitor.visitFunExpr(expr: self) as? R }
 }
 

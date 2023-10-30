@@ -11,66 +11,96 @@ protocol StmtVisitor<R> {
 	func visitReturnStmt(stmt: Return) throws -> R?
 }
 
-protocol Stmt {
-	func accept<R>(visitor: any StmtVisitor) throws -> R?
+class Stmt {
+	func accept<R>(visitor: any StmtVisitor) throws -> R? { return nil }
 }
 
-struct Block: Stmt {
+class Block: Stmt {
 	let statements: [Stmt]
+	init(statements: [Stmt]) {
+		self.statements = statements
+	}
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitBlockStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitBlockStmt(stmt: self) as? R }
 }
 
-struct Expression: Stmt {
+class Expression: Stmt {
 	let expression: Expr
+	init(expression: Expr) {
+		self.expression = expression
+	}
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitExpressionStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitExpressionStmt(stmt: self) as? R }
 }
 
-struct If: Stmt {
+class If: Stmt {
 	let condition: Expr
 	let thenBranch: Stmt
 	let elseBranch: Stmt?
+	init(condition: Expr, thenBranch: Stmt, elseBranch: Stmt?) {
+		self.condition = condition
+		self.thenBranch = thenBranch
+		self.elseBranch = elseBranch
+	}
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitIfStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitIfStmt(stmt: self) as? R }
 }
 
-struct Print: Stmt {
+class Print: Stmt {
 	let expression: Expr
+	init(expression: Expr) {
+		self.expression = expression
+	}
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitPrintStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitPrintStmt(stmt: self) as? R }
 }
 
-struct Var: Stmt {
+class Var: Stmt {
 	let name: Token
 	let initializer: Expr?
+	init(name: Token, initializer: Expr?) {
+		self.name = name
+		self.initializer = initializer
+	}
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitVarStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitVarStmt(stmt: self) as? R }
 }
 
-struct While: Stmt {
+class While: Stmt {
 	let condition: Expr
 	let body: Stmt
+	init(condition: Expr, body: Stmt) {
+		self.condition = condition
+		self.body = body
+	}
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitWhileStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitWhileStmt(stmt: self) as? R }
 }
 
-struct Break: Stmt {
+class Break: Stmt {
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitBreakStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitBreakStmt(stmt: self) as? R }
 }
 
-struct Function: Stmt {
+class Function: Stmt {
 	let name: Token
 	let function: Fun
+	init(name: Token, function: Fun) {
+		self.name = name
+		self.function = function
+	}
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitFunctionStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitFunctionStmt(stmt: self) as? R }
 }
 
-struct Return: Stmt {
+class Return: Stmt {
 	let keyword: Token
 	let value: Expr?
+	init(keyword: Token, value: Expr?) {
+		self.keyword = keyword
+		self.value = value
+	}
 	@discardableResult
-	func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitReturnStmt(stmt: self) as? R }
+	override func accept<R>(visitor: any StmtVisitor) throws -> R? { return try visitor.visitReturnStmt(stmt: self) as? R }
 }
 

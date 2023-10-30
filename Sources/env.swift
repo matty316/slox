@@ -42,4 +42,21 @@ class Env {
         
         values[name.lexeme] = value
     }
+    
+    func getAt(distance: Int, name: String) -> Any? {
+        return ancestor(distance).values[name] ?? nil
+    }
+    
+    func ancestor(_ distance: Int) -> Env {
+        var env = self
+        for _ in 0..<distance {
+            env = env.enclosing!
+        }
+        return env
+    }
+    
+    func assignAt(distance: Int, name: Token, value: Any?) {
+        let env = ancestor(distance)
+        env.values[name.lexeme] = value
+    }
 }
